@@ -1,132 +1,56 @@
-\# CÁC QUY TRÌNH HỆ THỐNG (SYSTEM FLOWCHARTS)
+# CÁC QUY TRÌNH HỆ THỐNG (SYSTEM FLOWCHARTS)
 
-
-
-\## 1. Quy trình Đăng nhập (Login Process)
-
+## 1. Quy trình Đăng nhập
 ```mermaid
-
 flowchart TD
+    Start([Bắt đầu]) --> Input[/Người dùng nhập User & Pass/]
+    Input --> CheckEmpty{Dữ liệu rỗng?}
+    CheckEmpty -- Có --> Error1[Thông báo: Vui lòng nhập đủ]
+    Error1 --> Input
+    CheckEmpty -- Không --> QueryDB[(Query Database Users)]
+    QueryDB --> CheckValid{User/Pass đúng?}
+    CheckValid -- Sai --> Error2[Thông báo: Sai tài khoản]
+    Error2 --> Input
+    CheckValid -- Đúng --> CheckRole{Kiểm tra Role}
+    CheckRole -- Admin --> RedirectAdmin[Chuyển hướng: Admin Dashboard]
+    CheckRole -- Customer --> RedirectHome[Chuyển hướng: Trang chủ]
+    RedirectAdmin --> End([Kết thúc])
+    RedirectHome --> End
+```
 
-&nbsp;   Start(\[Bắt đầu]) --> Input\[/Người dùng nhập User \& Pass/]
-
-&nbsp;   Input --> CheckEmpty{Dữ liệu rỗng?}
-
-&nbsp;   
-
-&nbsp;   CheckEmpty -- Có --> Error1\[Thông báo: Vui lòng nhập đủ]
-
-&nbsp;   Error1 --> Input
-
-&nbsp;   
-
-&nbsp;   CheckEmpty -- Không --> QueryDB\[(Query Database Users)]
-
-&nbsp;   QueryDB --> CheckValid{User/Pass đúng?}
-
-&nbsp;   
-
-&nbsp;   CheckValid -- Sai --> Error2\[Thông báo: Sai tài khoản]
-
-&nbsp;   Error2 --> Input
-
-&nbsp;   
-
-&nbsp;   CheckValid -- Đúng --> CheckRole{Kiểm tra Role}
-
-&nbsp;   
-
-&nbsp;   CheckRole -- Admin --> RedirectAdmin\[Chuyển hướng: Admin Dashboard]
-
-&nbsp;   CheckRole -- Customer --> RedirectHome\[Chuyển hướng: Trang chủ]
-
-&nbsp;   
-
-&nbsp;   RedirectAdmin --> End(\[Kết thúc])
-
-&nbsp;   RedirectHome --> End
-
+## 2. Quy trình Tìm kiếm
+```mermaid
 flowchart TD
+    Start([Bắt đầu]) --> LoadAll[(Load toàn bộ SP từ DB)]
+    LoadAll --> DisplayAll[Hiển thị danh sách SP]
+    DisplayAll --> UserAction{Hành động User}
+    UserAction -- Tìm kiếm --> InputSearch[/Nhập từ khóa vào Search/]
+    InputSearch --> CheckNull{Từ khóa rỗng?}
+    CheckNull -- Có --> DisplayAll
+    CheckNull -- Không --> QuerySearch[(SELECT WHERE Name LIKE...)]
+    QuerySearch --> CheckResult{Có kết quả?}
+    CheckResult -- Không --> MsgEmpty[Báo: Không tìm thấy]
+    CheckResult -- Có --> DisplayFilter[Hiển thị list đã lọc]
+    MsgEmpty --> UserAction
+    DisplayFilter --> UserAction
+    UserAction -- Click SP --> ViewDetail[Vào trang Chi tiết]
+    ViewDetail --> End([Kết thúc])
+```
 
-&nbsp;   Start(\[Bắt đầu]) --> LoadAll\[(Load toàn bộ SP từ DB)]
-
-&nbsp;   LoadAll --> DisplayAll\[Hiển thị danh sách SP]
-
-&nbsp;   
-
-&nbsp;   DisplayAll --> UserAction{Hành động User}
-
-&nbsp;   
-
-&nbsp;   %% Nhánh tìm kiếm
-
-&nbsp;   UserAction -- Tìm kiếm --> InputSearch\[/Nhập từ khóa vào ô Search/]
-
-&nbsp;   InputSearch --> CheckNull{Từ khóa rỗng?}
-
-&nbsp;   
-
-&nbsp;   CheckNull -- Có (Rỗng) --> DisplayAll
-
-&nbsp;   CheckNull -- Không (Có chữ) --> QuerySearch\[(SELECT... WHERE Name LIKE %...%)]
-
-&nbsp;   
-
-&nbsp;   QuerySearch --> CheckResult{Có kết quả không?}
-
-&nbsp;   CheckResult -- Không --> MsgEmpty\[Hiện thông báo: Không tìm thấy]
-
-&nbsp;   CheckResult -- Có --> DisplayFilter\[Hiển thị danh sách đã lọc]
-
-&nbsp;   
-
-&nbsp;   MsgEmpty --> UserAction
-
-&nbsp;   DisplayFilter --> UserAction
-
-&nbsp;   
-
-&nbsp;   %% Nhánh xem chi tiết
-
-&nbsp;   UserAction -- Click ảnh SP --> ViewDetail\[Chuyển sang trang Product Detail]
-
-&nbsp;   ViewDetail --> End(\[Kết thúc])
-
+## 3. Quy trình Admin
+```mermaid
 flowchart TD
-
-&nbsp;   Start(\[Start Admin]) --> ViewList\[Xem danh sách Sản phẩm]
-
-&nbsp;   ViewList --> Action{Chọn chức năng}
-
-&nbsp;   
-
-&nbsp;   %% Chức năng Thêm
-
-&nbsp;   Action -- Thêm mới --> InputInfo\[/Nhập: Tên, Giá, Ảnh, Tồn kho/]
-
-&nbsp;   InputInfo --> Validate{Dữ liệu hợp lệ?}
-
-&nbsp;   Validate -- Sai (Giá âm/Thiếu tên) --> ErrorMsg\[Báo lỗi] --> InputInfo
-
-&nbsp;   Validate -- Đúng --> InsertDB\[(INSERT INTO Products)]
-
-&nbsp;   InsertDB --> Success\[Thông báo thành công]
-
-&nbsp;   
-
-&nbsp;   %% Chức năng Xóa
-
-&nbsp;   Action -- Xóa --> SelectItem\[Chọn SP cần xóa]
-
-&nbsp;   SelectItem --> Confirm{Xác nhận xóa?}
-
-&nbsp;   Confirm -- Không --> ViewList
-
-&nbsp;   Confirm -- Có --> DeleteDB\[(DELETE FROM Products)]
-
-&nbsp;   DeleteDB --> Success
-
-&nbsp;   
-
-&nbsp;   Success --> ViewList
-
+    Start([Start Admin]) --> ViewList[Xem list SP]
+    ViewList --> Action{Chọn chức năng}
+    Action -- Thêm --> InputInfo[/Nhập: Tên, Giá, Ảnh/]
+    InputInfo --> Validate{Hợp lệ?}
+    Validate -- Sai --> ErrorMsg[Báo lỗi] --> InputInfo
+    Validate -- Đúng --> InsertDB[(INSERT INTO Products)]
+    InsertDB --> Success[Thông báo OK]
+    Action -- Xóa --> SelectItem[Chọn SP xóa]
+    SelectItem --> Confirm{Xác nhận?}
+    Confirm -- Không --> ViewList
+    Confirm -- Có --> DeleteDB[(DELETE FROM Products)]
+    DeleteDB --> Success
+    Success --> ViewList
+```
