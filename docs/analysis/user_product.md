@@ -58,7 +58,7 @@ flowchart TD
 ```
 
 
-# 4. Class Diagram (System Structure)
+## 4. Class Diagram (System Structure)
 ```mermaid
 classDiagram
     class User {
