@@ -43,3 +43,51 @@ flowchart TD
     Summary --> UpdateLog[Update Log Status] --> End
 ```
 
+## 3. Class Diagram: System Architecture
+Shows the relationship between controllers, services, and data models.
+
+```mermaid
+classDiagram
+    class FlashSaleController {
+        +joinFlashSale(int userId, int itemId) Response
+        +getCampaignInfo(int campaignId)
+    }
+
+    class FlashSaleService {
+        +processTransaction(int userId, int itemId) boolean
+        -lockInventory(int itemId) void
+        -checkStock(int itemId) boolean
+    }
+
+    class FlashSaleItem {
+        -int id
+        -int productId
+        -int quantity
+        -int sold
+        -double salePrice
+    }
+
+    class ImportController {
+        +uploadFile(MultipartFile file) Response
+        +getImportHistory()
+    }
+
+    class ImportService {
+        +readCsv(File file) List
+        +validateData(Row row) boolean
+        +saveToDatabase(List data) void
+    }
+
+    class ImportLog {
+        -int id
+        -String fileName
+        -int successCount
+        -int errorCount
+        -Date importTime
+    }
+
+    FlashSaleController --> FlashSaleService : uses
+    FlashSaleService ..> FlashSaleItem : manages
+    ImportController --> ImportService : uses
+    ImportService ..> ImportLog : creates
+```
