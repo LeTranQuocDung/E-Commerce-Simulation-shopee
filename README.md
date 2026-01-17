@@ -4,4 +4,4 @@ Project: Shopee
 
 Members:
 
-Full Name: Đinh Thành Trung Student ID: QE200047
+Full Name: Đinh Thành Trung, Student ID: QE200047
