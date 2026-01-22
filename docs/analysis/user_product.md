@@ -62,25 +62,25 @@ flowchart TD
 ```mermaid
 classDiagram
     class User {
-        -int userID
+        -int ID
         -String username
         -String password
         -String fullName
         -String email
         -String role
+        +List~Product~ searchProduct(String keyword)
         +boolean login(String user, String pass)
         +boolean register()
         +boolean isAdmin()
     }
 
     class Product {
-        -int productID
-        -String productName
+        -int ID
+        -String name
         -double price
         -int stockQuantity
         -String imageURL
         -String description
-        +List~Product~ searchProduct(String keyword)
         +boolean checkStock()
     }
 
