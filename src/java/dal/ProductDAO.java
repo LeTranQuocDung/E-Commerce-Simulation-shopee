@@ -103,31 +103,4 @@ public class ProductDAO extends DBContext {
             e.printStackTrace();
         }
     }
-    // Hàm mới: Lọc sản phẩm theo Category ID
-    public List<ProductDTO> getProductsByCategory(int categoryId) {
-        List<ProductDTO> list = new ArrayList<>();
-        String sql = "SELECT TOP 60 p.id, p.name, s.shop_name, MIN(v.price) as min_price, p.image_url "
-                + "FROM Products p "
-                + "JOIN Shops s ON p.shop_id = s.id "
-                + "JOIN ProductVariants v ON p.id = v.product_id "
-                + "WHERE p.category_id = ? " 
-                + "GROUP BY p.id, p.name, s.shop_name, p.image_url ORDER BY p.id DESC";
-
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, categoryId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(new ProductDTO(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("shop_name"),
-                        rs.getDouble("min_price"),
-                        rs.getString("image_url")
-                ));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
 }
