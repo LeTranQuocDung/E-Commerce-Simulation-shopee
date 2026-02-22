@@ -3,37 +3,27 @@ package model;
 public class Product {
 
     private int id;
-    private int shopId;
+    private int shopId; // Khớp với cột shop_id trong Database
     private String name;
     private String description;
-    private double price;   // Mới thêm
-    private String image;   // Mới thêm
+    private double price;
+    private String imageUrl; // Khớp với hàm setImageUrl bị lỗi
 
+    // Constructor rỗng (Bắt buộc phải có để DAO dùng)
     public Product() {
     }
 
-    // Constructor 1: ĐẦY ĐỦ (Dùng cho ProductDAO mới)
-    public Product(int id, int shopId, String name, String description, double price, String image) {
+    // Constructor đầy đủ
+    public Product(int id, int shopId, String name, String description, double price, String imageUrl) {
         this.id = id;
         this.shopId = shopId;
         this.name = name;
         this.description = description;
         this.price = price;
-        this.image = image;
+        this.imageUrl = imageUrl;
     }
 
-    // Constructor 2: RÚT GỌN (Dùng cho AdminImport cũ để không bị lỗi)
-    // Nó sẽ tự điền giá = 0 và ảnh mặc định
-    public Product(int id, int shopId, String name, String description) {
-        this.id = id;
-        this.shopId = shopId;
-        this.name = name;
-        this.description = description;
-        this.price = 0; // Giá mặc định
-        this.image = "https://placehold.co/300"; // Ảnh mặc định
-    }
-
-    // Getter & Setter
+    // --- CÁC HÀM GETTER & SETTER ---
     public int getId() {
         return id;
     }
@@ -74,11 +64,11 @@ public class Product {
         this.price = price;
     }
 
-    public String getImage() {
-        return image;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setImage(String image) {
-        this.image = image;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

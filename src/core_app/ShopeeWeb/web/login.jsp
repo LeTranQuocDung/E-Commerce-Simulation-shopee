@@ -221,7 +221,7 @@
                                 <input type="text" name="user" class="form-control" placeholder="Email / Số điện thoại / Tên đăng nhập" required>
                             </div>
                             <div class="mb-3">
-                                <input type="password" name="pass" class="form-control" placeholder="Mật khẩu" required>
+                                <input type="password" name="password" class="form-control" placeholder="Mật khẩu" required>
                             </div>
 
                             <button type="submit" class="btn-login">Đăng nhập</button>
