@@ -286,3 +286,321 @@ Shopee, Facebook hay Google đều sử dụng hash + salt + nhiều vòng mã h
 Từ quá trình phân tích trên, có thể kết luận rằng lỗi đăng nhập trong hệ thống xuất phát từ sự không đồng nhất trong quá trình mã hóa mật khẩu giữa chức năng đăng ký và đăng nhập. Khi đăng ký, mật khẩu đã được mã hóa bằng MD5 trước khi lưu vào database, nhưng khi đăng nhập lại sử dụng mật khẩu gốc để so sánh. Điều này dẫn đến việc truy vấn SQL không tìm thấy bản ghi phù hợp và hệ thống luôn trả về kết quả đăng nhập thất bại.
 Sau khi bổ sung bước mã hóa mật khẩu trong LoginServlet, đồng thời kiểm tra lại tên tham số trong form JSP và cấu hình thư viện servlet, hệ thống có thể xác thực người dùng chính xác và chức năng đăng nhập sẽ hoạt động bình thường.
 Ngoài ra, để nâng cao mức độ an toàn cho ứng dụng web, trong tương lai hệ thống có thể thay thế MD5 bằng các thuật toán băm hiện đại như BCrypt hoặc SHA-256, giúp bảo vệ dữ liệu người dùng tốt
+Hoàn thiện và bảo vệ hệ thống Shopee Web Clone
+1. Tổng quan giai đoạn hoàn thiện dự án
+Sau khi hoàn thành các chức năng chính của hệ thống như đăng ký, đăng nhập, quản lý giỏ hàng, đặt hàng, kiểm tra tồn kho và xử lý đồng bộ khi có nhiều người mua cùng lúc, giai đoạn cuối của dự án tập trung vào việc hoàn thiện sản phẩm, tối ưu trải nghiệm người dùng và chuẩn bị cho buổi bảo vệ đồ án.
+Ở giai đoạn này, hệ thống không chỉ cần hoạt động đúng về mặt chức năng mà còn cần đảm bảo:
+Giao diện rõ ràng và dễ sử dụng
+Hệ thống có thể xử lý nhiều request đồng thời
+Dữ liệu được quản lý ổn định và có thể reset nhanh
+Có báo cáo thống kê trực quan
+Sản phẩm có thể đóng gói và triển khai trên server
+Toàn bộ các yếu tố trên giúp hệ thống đạt tiêu chuẩn của một ứng dụng web hoàn chỉnh.
+2. Kiến trúc hệ thống của project
+Dự án Shopee Web Clone được xây dựng dựa trên mô hình MVC (Model – View – Controller) trong Java Web.
+2.1 Model (Data Layer)
+Tầng Model chịu trách nhiệm quản lý dữ liệu và giao tiếp với database. Các lớp trong tầng này thường bao gồm:
+User
+Product
+ProductVariant
+Order
+Cart
+CartItem
+Ngoài ra còn có các lớp DAO (Data Access Object) như:
+UserDAO
+ProductDAO
+OrderDAO
+StatsDAO
+Các DAO này thực hiện nhiệm vụ:
+Truy vấn dữ liệu từ database
+Thêm, sửa, xóa dữ liệu
+Thực hiện các phép thống kê
+Ví dụ:
+SELECT * FROM Users
+SELECT * FROM Products
+SELECT SUM(total_amount) FROM Orders
+Việc tách DAO giúp code dễ bảo trì và tái sử dụng.
+2.2 Controller (Servlet Layer)
+Tầng Controller sử dụng Servlet để xử lý request từ người dùng.
+Một số servlet chính trong hệ thống:
+RegisterServlet
+LoginServlet
+HomeServlet
+BuyNowServlet
+CartServlet
+AdminServlet
+AdminImportServlet
+StressTestServlet
+Servlet đóng vai trò như bộ điều khiển trung tâm.
+Quy trình xử lý request:
+Người dùng gửi request từ trình duyệt
+Servlet nhận request
+Servlet xử lý logic
+Gọi DAO để truy xuất dữ liệu
+Trả kết quả về JSP
+Ví dụ:
+UserDAO dao = new UserDAO();
+User user = dao.login(email, passwordHash);
+Sau đó servlet chuyển dữ liệu sang JSP bằng:
+request.setAttribute("account", user);
+2.3 View (Giao diện JSP)
+Tầng View sử dụng JSP + HTML + CSS + JavaScript để hiển thị giao diện cho người dùng.
+Một số trang quan trọng:
+home.jsp
+login.jsp
+register.jsp
+cart.jsp
+admin.jsp
+admin_import.jsp
+Các trang này được thiết kế với Bootstrap 5 để đảm bảo giao diện hiện đại và responsive.
+Ngoài ra hệ thống còn sử dụng Chart.js để vẽ biểu đồ doanh thu và thống kê đơn hàng trong trang Admin Dashboard.
+3. Hệ thống Import dữ liệu (Migration System)
+Để phục vụ việc demo và kiểm thử hệ thống, project có chức năng Import dữ liệu tự động từ file CSV.
+Trang quản trị cho phép admin:
+Reset toàn bộ database
+Import dữ liệu mẫu
+Làm sạch dữ liệu
+Hiển thị log quá trình xử lý
+Ví dụ log hiển thị:
+> Starting database reset...
+> Deleting old data...
+> Importing Users (10000 rows)...
+> Importing Products (5000 rows)...
+> Importing Orders...
+> Import completed successfully!
+Chức năng này giúp:
+Demo hệ thống nhanh
+Tạo dữ liệu test lớn
+Tránh lỗi dữ liệu cũ
+4. Kiểm tra khả năng chịu tải (Stress Test)
+Một điểm nổi bật của project là chức năng Stress Test để mô phỏng Flash Sale.
+Trong thực tế, các trang thương mại điện tử thường gặp tình trạng:
+Nhiều người mua cùng lúc
+Tồn kho bị âm
+Hệ thống xử lý sai dữ liệu
+Để mô phỏng tình huống này, project sử dụng một tool riêng gọi là ShopeeAttacker.
+Tool này tạo ra nhiều luồng (threads) gửi request mua hàng đồng thời.
+Ví dụ:
+Thread 1 -> buy
+Thread 2 -> buy
+Thread 3 -> buy
+...
+Thread 50 -> buy
+Nếu hệ thống không có cơ chế bảo vệ, kết quả có thể như sau:
+Stock ban đầu = 1
+50 người mua cùng lúc
+Stock sau cùng = -49
+Đây là lỗi Race Condition.
+5. Giải pháp xử lý Race Condition
+Để khắc phục lỗi này, hệ thống áp dụng cơ chế synchronized trong Java.
+Ví dụ:
+protected synchronized void doGet(...)
+Cơ chế này đảm bảo:
+Chỉ một thread được truy cập vào đoạn code tại một thời điểm
+Các request khác phải chờ
+Kết quả:
+Stock ban đầu = 1
+50 request cùng lúc
+Chỉ 1 request mua thành công
+Stock sau cùng = 0
+Điều này đảm bảo dữ liệu luôn chính xác và hệ thống không bị lỗi tồn kho âm.
+6. Dashboard quản trị (Admin Dashboard)
+Trang Admin Dashboard giúp quản trị viên theo dõi tình trạng hoạt động của hệ thống.
+Trang này hiển thị:
+Tổng doanh thu
+Tổng số đơn hàng
+Tổng số khách hàng
+Biểu đồ doanh thu theo ngày
+Biểu đồ được vẽ bằng thư viện Chart.js.
+Ví dụ:
+Thứ 2: 1.5 triệu
+Thứ 3: 2.3 triệu
+Thứ 4: 1.8 triệu
+Thứ 5: 3.2 triệu
+Thứ 6: 2.1 triệu
+Thứ 7: 1.1 triệu
+CN: 4.5 triệu
+Nhờ vậy admin có thể:
+Theo dõi doanh thu
+Phân tích xu hướng bán hàng
+Quản lý hoạt động kinh doanh
+7. Đóng gói hệ thống (.WAR)
+Sau khi hoàn thành dự án, hệ thống được đóng gói thành file WAR (Web Application Archive).
+File WAR chứa:
+Source code
+JSP
+Servlet
+Thư viện
+Cấu hình web
+Cách tạo file WAR trong NetBeans:
+Chuột phải vào project
+Chọn Clean and Build
+NetBeans tự động tạo file trong thư mục:
+dist/ShopeeWeb.war
+File này có thể deploy trực tiếp lên:
+Apache Tomcat
+Linux Server
+Cloud Server
+8. Quy trình demo khi bảo vệ đồ án
+Trong buổi bảo vệ, hệ thống được demo theo trình tự sau:
+Bước 1 – Import dữ liệu
+Admin truy cập:
+/admin-import
+Sau đó bấm nút:
+BẮT ĐẦU IMPORT NGAY
+Hệ thống reset database và nạp dữ liệu mới.
+Bước 2 – Trải nghiệm người dùng
+Chuyển sang trang chủ:
+/home
+Thực hiện các thao tác:
+Xem sản phẩm
+Thêm vào giỏ hàng
+Thanh toán
+Tạo đơn hàng
+Bước 3 – Stress Test
+Mở tool tấn công và chạy nhiều request cùng lúc.
+Sau đó kiểm tra database:
+SELECT stock FROM ProductVariants WHERE id = 1
+Kết quả:
+Stock = 0
+Điều này chứng minh hệ thống xử lý đồng bộ chính xác.
+Bước 4 – Xem báo cáo
+Admin truy cập:
+/admin
+Trang Dashboard hiển thị:
+Doanh thu
+Biểu đồ
+Thống kê hệ thống
+9. Kết luận
+Dự án Shopee Web Clone đã xây dựng thành công một hệ thống thương mại điện tử cơ bản với đầy đủ các chức năng quan trọng như:
+Quản lý người dùng
+Quản lý sản phẩm
+Giỏ hàng
+Đặt hàng
+Quản trị hệ thống
+Thống kê doanh thu
+Kiểm thử chịu tải
+Ngoài ra, hệ thống còn triển khai cơ chế xử lý đồng bộ để tránh lỗi Race Condition, giúp đảm bảo tính chính xác của dữ liệu khi nhiều người dùng truy cập cùng lúc.
+Việc đóng gói hệ thống thành file WAR giúp ứng dụng có thể triển khai dễ dàng trên server thực tế.
+Dự án này không chỉ giúp hiểu rõ cách xây dựng một ứng dụng web bằng Java Servlet và JSP, mà còn cung cấp kinh nghiệm thực tế về thiết kế hệ thống, tối ưu hiệu năng và xử lý các tình huống phức tạp trong môi trường nhiều người dùng.
+> Phân tích luồng xử lý hệ thống trong Shopee Web Clone
+1. Luồng xử lý request trong hệ thống web
+Trong một ứng dụng web, mọi thao tác của người dùng đều được gửi đến server dưới dạng HTTP Request. Khi người dùng nhấn một nút, mở trang hoặc thực hiện hành động nào đó, trình duyệt sẽ gửi yêu cầu đến server để xử lý.
+Trong dự án Shopee Web Clone, luồng xử lý request được thực hiện theo mô hình sau:
+Browser → Servlet (Controller) → DAO → Database → JSP → Browser
+Quy trình này có thể được mô tả chi tiết như sau:
+Người dùng thực hiện hành động trên giao diện (ví dụ: nhấn nút mua hàng).
+Trình duyệt gửi request đến server thông qua URL.
+Servlet nhận request và xử lý logic.
+Servlet gọi DAO để truy vấn hoặc cập nhật dữ liệu trong database.
+Database trả dữ liệu về DAO.
+DAO trả kết quả về Servlet.
+Servlet chuyển dữ liệu sang trang JSP để hiển thị.
+JSP tạo HTML và gửi lại cho trình duyệt.
+Ví dụ khi người dùng truy cập trang chủ:
+Browser → /home → HomeServlet → ProductDAO → Database → home.jsp → Browser
+Quy trình này giúp tách biệt rõ ràng giữa:
+phần giao diện
+phần xử lý logic
+phần quản lý dữ liệu
+Nhờ đó hệ thống dễ bảo trì và mở rộng.
+2. Cơ chế quản lý phiên đăng nhập (Session Management)
+Trong ứng dụng web, giao thức HTTP là stateless, nghĩa là server không tự động nhớ người dùng là ai giữa các request khác nhau. Vì vậy hệ thống cần sử dụng Session để lưu trạng thái đăng nhập.
+Khi người dùng đăng nhập thành công, hệ thống sẽ tạo một session mới:
+HttpSession session = request.getSession();
+session.setAttribute("account", user);
+Session này sẽ lưu thông tin của người dùng trong suốt quá trình sử dụng hệ thống.
+Sau đó khi người dùng truy cập các trang khác, server có thể kiểm tra session:
+User user = (User) session.getAttribute("account");
+Nếu session tồn tại, hệ thống biết rằng người dùng đã đăng nhập.
+Session được sử dụng cho nhiều chức năng quan trọng như:
+xác định người dùng hiện tại
+lưu giỏ hàng
+kiểm tra quyền admin
+bảo vệ các trang quản trị
+Nếu session hết hạn hoặc người dùng đăng xuất, session sẽ bị xóa:
+session.invalidate();
+Điều này đảm bảo tính bảo mật cho hệ thống.
+3. Cơ chế hoạt động của giỏ hàng (Shopping Cart)
+Giỏ hàng là một chức năng quan trọng trong hệ thống thương mại điện tử. Nó cho phép người dùng thêm nhiều sản phẩm trước khi thực hiện thanh toán.
+Trong project này, giỏ hàng được quản lý thông qua Session.
+Khi người dùng thêm sản phẩm vào giỏ, hệ thống thực hiện các bước:
+Lấy giỏ hàng hiện tại từ session
+Nếu chưa có thì tạo mới
+Thêm sản phẩm vào danh sách
+Lưu lại vào session
+Ví dụ:
+Cart cart = (Cart) session.getAttribute("cart");
+Nếu cart là null, hệ thống sẽ tạo giỏ mới:
+cart = new Cart();
+Sau đó thêm sản phẩm:
+cart.addItem(product, quantity);
+Cuối cùng lưu lại:
+session.setAttribute("cart", cart);
+Cách làm này giúp giỏ hàng tồn tại trong suốt phiên làm việc của người dùng.
+4. Quy trình đặt hàng (Checkout Process)
+Khi người dùng hoàn tất việc chọn sản phẩm trong giỏ hàng, họ có thể tiến hành đặt hàng.
+Quy trình checkout trong hệ thống được thực hiện theo các bước sau:
+Bước 1: Người dùng nhấn nút thanh toán
+Request được gửi đến:
+/checkout
+Bước 2: Servlet kiểm tra session
+Hệ thống kiểm tra:
+người dùng đã đăng nhập chưa
+giỏ hàng có sản phẩm không
+Bước 3: Tạo đơn hàng
+Servlet gọi OrderDAO để tạo một bản ghi mới trong bảng Orders.
+Ví dụ:
+INSERT INTO Orders(user_id, total_amount, order_date)
+Bước 4: Lưu chi tiết đơn hàng
+Mỗi sản phẩm trong giỏ hàng sẽ được lưu vào bảng OrderItems.
+INSERT INTO OrderItems(order_id, product_id, quantity, price)
+Bước 5: Cập nhật tồn kho
+Sau khi đặt hàng thành công, hệ thống giảm số lượng tồn kho:
+UPDATE ProductVariants
+SET stock = stock - quantity
+Bước 6: Xóa giỏ hàng
+Sau khi đặt hàng thành công, giỏ hàng sẽ được xóa khỏi session để chuẩn bị cho đơn hàng mới.
+5. Hệ thống quản trị (Admin System)
+Trong project Shopee Web Clone, hệ thống còn có một phần dành cho quản trị viên.
+Trang admin cho phép quản trị viên:
+xem thống kê hệ thống
+quản lý sản phẩm
+theo dõi đơn hàng
+xem doanh thu
+Admin Dashboard hiển thị các thông tin quan trọng như:
+tổng số người dùng
+tổng số đơn hàng
+tổng doanh thu
+biểu đồ doanh thu theo ngày
+Những dữ liệu này được truy vấn từ database thông qua StatsDAO.
+Ví dụ truy vấn tổng doanh thu:
+SELECT SUM(total_amount) FROM Orders
+Dữ liệu sau đó được hiển thị bằng biểu đồ Chart.js, giúp admin dễ dàng theo dõi hoạt động kinh doanh.
+6. Ý nghĩa thực tiễn của dự án
+Dự án Shopee Web Clone không chỉ đơn thuần là một bài tập lập trình mà còn giúp sinh viên hiểu rõ cách xây dựng một hệ thống thương mại điện tử thực tế.
+Thông qua dự án này, sinh viên có thể học được:
+6.1 Thiết kế hệ thống web
+Sinh viên hiểu cách tổ chức project theo mô hình MVC, giúp tách biệt logic xử lý, giao diện và dữ liệu.
+6.2 Làm việc với database
+Project giúp sinh viên thực hành:
+thiết kế bảng dữ liệu
+viết câu lệnh SQL
+tối ưu truy vấn
+6.3 Xử lý nhiều người dùng
+Thông qua phần Stress Test, sinh viên hiểu được các vấn đề thực tế như:
+race condition
+đồng bộ dữ liệu
+xử lý request đồng thời
+6.4 Phát triển ứng dụng hoàn chỉnh
+Sinh viên trải nghiệm toàn bộ quy trình phát triển phần mềm:
+phân tích yêu cầu
+thiết kế hệ thống
+lập trình
+kiểm thử
+triển khai
+Đây là những kỹ năng rất quan trọng trong ngành Software Engineering.
+7. Tổng kết
+Dự án Shopee Web Clone đã xây dựng thành công một hệ thống thương mại điện tử cơ bản với đầy đủ các chức năng như đăng ký, đăng nhập, quản lý sản phẩm, giỏ hàng và đặt hàng. Hệ thống được phát triển dựa trên kiến trúc MVC, sử dụng Java Servlet, JSP và MySQL để xử lý dữ liệu.
+Bên cạnh đó, dự án còn triển khai các cơ chế quan trọng như quản lý session, xử lý đồng bộ khi nhiều người dùng truy cập cùng lúc và xây dựng hệ thống thống kê dành cho quản trị viên. Những tính năng này giúp hệ thống hoạt động ổn định và mô phỏng được cách hoạt động của các nền tảng thương mại điện tử thực tế.
+Thông qua việc thực hiện dự án này, sinh viên không chỉ nâng cao kỹ năng lập trình Java Web mà còn hiểu rõ hơn về cách xây dựng một hệ thống web hoàn chỉnh, từ tầng giao diện đến tầng dữ liệu và xử lý nghiệp vụ. Đây là nền tảng quan trọng để phát triển các hệ thống phần mềm phức tạp hơn trong tương lai.
